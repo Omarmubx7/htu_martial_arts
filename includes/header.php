@@ -1,0 +1,122 @@
+<!-- includes/header.php -->
+<!-- This is the shared header template used by all pages -->
+<!-- It includes the HTML head section, meta tags, and navigation navbar -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Character encoding for the webpage -->
+  <meta charset="UTF-8">
+  <!-- Viewport meta tag ensures proper scaling on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Page title - shows in browser tab and search results -->
+  <!-- If $pageTitle is set by the page, use it; otherwise use default -->
+  <title><?php echo isset($pageTitle) ? $pageTitle . " - HTU Martial Arts" : "HTU Martial Arts"; ?></title>
+  
+  <!-- SEO meta tags for search engines -->
+  <meta name="description" content="Join HTU Martial Arts for the best Jiu-jitsu, Karate, and Muay Thai training. Expert instructors, flexible schedules, and tailored plans for every fighter.">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph tags for social media sharing (Facebook, Twitter, etc.) -->
+  <meta property="og:title" content="HTU Martial Arts">
+  <meta property="og:description" content="Train with elite instructors across Jiu-jitsu, Karate, and Muay Thai. Flexible schedules and membership plans for every goal.">
+  <meta property="og:image" content="images/logo-social.png">
+  <meta property="og:type" content="website">
+  <!-- Generate the current page URL dynamically -->
+  <meta property="og:url" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; ?>">
+  
+  <!-- Twitter card tags for Twitter sharing -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="HTU Martial Arts">
+  <meta name="twitter:description" content="Train with elite instructors across Jiu-jitsu, Karate, and Muay Thai. Flexible schedules and membership plans for every goal.">
+  <meta name="twitter:image" content="images/logo-social.png">
+  
+  <!-- Canonical URL prevents duplicate content issues in search engines -->
+  <link rel="canonical" href="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; ?>">
+  
+  <!-- Theme color for browser address bar (mobile) -->
+  <meta name="theme-color" content="#e3342f">
+
+  <!-- Favicon - the icon shown in browser tab -->
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="shortcut icon" type="image/png" href="images/favicon.png">
+  <link rel="apple-touch-icon" href="images/logo-touch.png">
+  
+  <!-- Bootstrap CSS framework for responsive layout and components -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons - provides icon library for UI elements -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  
+  <!-- Custom CSS for sport theme styling - add time parameter to bust cache -->
+  <link href="css/sport-theme.css?v=<?php echo time(); ?>" rel="stylesheet">
+</head>
+<body>
+
+
+<!-- Navigation bar - fixed at top of page with semi-transparent background -->
+<!-- Uses CSS backdrop-filter for frosted glass effect -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-glass">
+  <div class="container">
+    <!-- Logo and brand text -->
+    <a class="navbar-brand d-flex align-items-center" href="index.php" aria-label="HTU Martial Arts" style="font-weight: 700; font-size: 1.5rem; text-transform: uppercase;">
+      <!-- Logo image with inverted colors (white on dark background) -->
+    <img src="images/logo-desktop.svg" alt="HTU Martial Arts Logo" style="height: 45px; margin-right: 12px;" class="navbar-logo">
+      <!-- Brand text with text shadow for readability -->
+    <span class="navbar-brand-text">HTU MARTIAL ARTS</span>
+    </a>
+    
+    <!-- Mobile menu toggle button - appears on small screens -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color: rgba(213, 6, 6, 0.78);">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <!-- Navigation links - collapse on mobile, expand on larger screens -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <!-- Classes link -->
+                <li class="nav-item"><a class="nav-link" href="classes_premium.php">Classes</a></li>
+                <!-- Memberships/Prices link -->
+                <li class="nav-item"><a class="nav-link" href="prices.php">Memberships</a></li>
+        
+        <!-- If user is logged in, show Account and Logout links -->
+        <?php if(isset($_SESSION['user_id'])): ?>
+          <?php if(isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+            <li class="nav-item"><a class="nav-link fw-bold" href="admin.php">Admin Dashboard</a></li>
+          <?php endif; ?>
+          <li class="nav-item"><a class="nav-link" href="dashboard.php">Account</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.php">Logout</a></li>
+        <!-- If user is NOT logged in, show Login and Join Now links -->
+        <?php else: ?>
+                        <li class="nav-item"><a class="nav-link" href="login.php">Login</a></li>
+                        <!-- Join Now button with special styling - handled by CSS class -->
+                        <li class="nav-item"><a class="nav-link join-btn" href="prices.php">Join Now</a></li>
+        <?php endif; ?>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- JavaScript for navbar scroll effect - changes colors when user scrolls down -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get navbar and all navigation elements
+    const navbar = document.querySelector('.navbar');
+    const navLinks = navbar.querySelectorAll('.nav-link');
+    const brandText = navbar.querySelector('.navbar-brand-text');
+    const logo = navbar.querySelector('.navbar-logo');
+    const joinBtn = navbar.querySelector('.join-btn');
+    
+    // Listen for scroll events on the window
+    window.addEventListener('scroll', function() {
+        // Toggle class-based scrolled state
+        if (window.scrollY > 50) {
+            navbar.classList.add('navbar-scrolled');
+        } else {
+            navbar.classList.remove('navbar-scrolled');
+        }
+    });
+    
+    // Trigger scroll event on page load to set initial navbar state
+    window.dispatchEvent(new Event('scroll'));
+});
+</script>
