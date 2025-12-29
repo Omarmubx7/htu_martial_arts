@@ -48,8 +48,9 @@ include 'includes/header.php';
         <?php
         // SELECT all membership plans from database
         // Fetches plan name, price, description, and ID for display
-        $sql = "SELECT * FROM memberships";
-        $result = $conn->query($sql);
+        $stmt = $conn->prepare("SELECT id, type, price, description FROM memberships");
+        $stmt->execute();
+        $result = $stmt->get_result();
 
         // Check if any plans exist in database, then loop through each one
         if ($result->num_rows > 0) {
@@ -101,6 +102,7 @@ include 'includes/header.php';
                 echo '</div>';
             }
         }
+        $stmt->close();
         ?>
     </div>
 </div>

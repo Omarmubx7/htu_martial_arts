@@ -8,15 +8,14 @@
 session_start();
 include 'includes/db.php';
 $pageTitle = "Login";
-include 'includes/header.php'; 
 
 // ===================================================================
 // HANDLE LOGIN LOGIC - Process form submission
 // ===================================================================
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get email and password from the login form
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    // Get email and password from the login form (safely)
+    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
 
     // Query the database to find user with this email
     // Using prepared statement to prevent SQL injection - very important for security!
@@ -40,12 +39,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Password is correct! Store user info in SESSION variables
             // This keeps them logged in as they navigate the site
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['role'] = $user['role']; // Either 'admin' or 'member'
+            // Check is_admin flag; set role to 'admin' if true, else default to 'member'
+            $role = (isset($user['is_admin']) && $user['is_admin'] == 1) ? 'admin' : 'member';
+            $_SESSION['role'] = $role; // Either 'admin' or 'member'
             $_SESSION['username'] = $user['username'];
             
             // Redirect to different pages based on user role
             // Admins go to admin panel, regular members go to their dashboard
-            if ($user['role'] === 'admin') {
+            if ($role === 'admin') {
                 header("Location: admin.php");
             } else {
                 header("Location: dashboard.php");
@@ -62,6 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error = "Invalid email or password.";
     }
 }
+include 'includes/header.php';
 ?>
 
 <!-- Login form container with centered layout -->

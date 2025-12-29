@@ -1,4 +1,5 @@
 <?php
+// SECURITY: Start session at the very top for secure session handling
 session_start();
 include 'includes/db.php';
 include 'includes/membership_rules.php';  // Include functions that check if user can book each class
@@ -40,25 +41,25 @@ include 'includes/header.php';
         <!-- Class Grid - displays all classes fetched from database -->
         <div class="schedule-grid">
             <?php
-            // FIX 1: Added 'is_kids_class' to the SELECT query
-            // We select 'martial_art' and 'is_kids_class' from the database.
-            // We order by day correctly (Monday -> Sunday) and then by time.
+            // SECURITY: Use prepared statement even without parameters for consistency against injection
             $sql = "SELECT id, class_name, day_of_week, start_time, end_time, martial_art, age_group, is_kids_class 
-                    FROM classes 
-                    ORDER BY FIELD(day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'), start_time";
-            $result = $conn->query($sql);
-            
+                FROM classes 
+                ORDER BY FIELD(day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'), start_time";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result && $result->num_rows > 0):
             while($class = $result->fetch_assoc()):
                 // Check access if user is logged in
                 $access_check = ['can_book' => false, 'reason' => 'Login to book'];
                 
                 if (isset($_SESSION['user_id'])) {
-                    // FIX 2 & 3: Passing 'martial_art' and 'is_kids_class' correctly
-                    // This fixes the logic error where class names didn't match martial arts
+                    // SECURITY: Passing validated fields to access checker
                     $access_check = canUserBookClass(
                         $_SESSION['user_id'], 
-                        $class['martial_art'],           // Correct: "Judo" (not "Beginner Judo")
-                        ($class['is_kids_class'] == 1)   // Correct: Database flag
+                        $class['martial_art'],
+                        ($class['is_kids_class'] == 1)
                     );
                 }
                 
@@ -73,33 +74,34 @@ include 'includes/header.php';
                 }
             ?>
                 <!-- FIX 4: Data attribute uses database flag -->
-                <div class="class-slot <?php echo $locked_class; ?>" 
-                     data-art="<?php echo htmlspecialchars($class_filter); ?>"
+                <div class="class-slot <?php echo htmlspecialchars($locked_class, ENT_QUOTES, 'UTF-8'); ?>" 
+                     data-art="<?php echo htmlspecialchars($class_filter, ENT_QUOTES, 'UTF-8'); ?>"
                      data-kids="<?php echo ($class['is_kids_class'] == 1) ? 'kids' : 'adult'; ?>"
                      style="background: rgba(255, 255, 255, 0.95); color: #1a1a2e; border: 1px solid rgba(220, 20, 60, 0.2);">
                     
-                    <div class="class-day" style="color: var(--color-primary);"><?php echo htmlspecialchars($class['day_of_week']); ?></div>
-                    <h4 style="color: #1a1a2e;"><?php echo htmlspecialchars($class['class_name']); ?></h4>
+                    <div class="class-day" style="color: var(--color-primary);"><?php echo htmlspecialchars($class['day_of_week'], ENT_QUOTES, 'UTF-8'); ?></div>
+                    <h4 style="color: #1a1a2e;"><?php echo htmlspecialchars($class['class_name'], ENT_QUOTES, 'UTF-8'); ?></h4>
                     <p class="class-time" style="color: #666;">
-                        <?php echo date('g:i A', strtotime($class['start_time'])); ?> - 
-                        <?php echo date('g:i A', strtotime($class['end_time'])); ?>
+                        <?php echo htmlspecialchars(date('g:i A', strtotime($class['start_time'])) . ' - ' . date('g:i A', strtotime($class['end_time'])), ENT_QUOTES, 'UTF-8'); ?>
                     </p>
                     
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <?php if ($access_check['can_book']): ?>
-                            <button class="book-btn" onclick="validateBooking(<?php echo $class['id']; ?>, '<?php echo htmlspecialchars($class['class_name']); ?>', event)">
+                            <button class="book-btn" onclick="validateBooking(<?php echo (int)$class['id']; ?>, '<?php echo htmlspecialchars($class['class_name'], ENT_QUOTES, 'UTF-8'); ?>', event)">
                                 📅 Book Now
                             </button>
                         <?php else: ?>
-                            <button class="book-btn" disabled title="<?php echo htmlspecialchars($access_check['reason']); ?>">
-                                🔒 <?php echo strlen($access_check['reason']) > 25 ? 'Restricted' : htmlspecialchars($access_check['reason']); ?>
+                            <button class="book-btn" disabled title="<?php echo htmlspecialchars($access_check['reason'], ENT_QUOTES, 'UTF-8'); ?>">
+                                🔒 <?php echo strlen($access_check['reason']) > 25 ? 'Restricted' : htmlspecialchars($access_check['reason'], ENT_QUOTES, 'UTF-8'); ?>
                             </button>
                         <?php endif; ?>
                     <?php else: ?>
                         <a href="login.php" class="book-btn">Login to Book</a>
                     <?php endif; ?>
                 </div>
-            <?php endwhile; ?>
+            <?php endwhile; else: ?>
+                <p class="text-center text-muted" style="grid-column: 1 / -1;">No classes scheduled yet. Please check back soon.</p>
+            <?php endif; ?>
         </div>
     </div>
 </section>

@@ -148,8 +148,9 @@ include 'includes/header.php';
         <h2 class="text-center mb-5 fw-bold text-deep-dark">Meet Our Instructors</h2>
         <div class="row g-4">
             <?php
-            $sql = "SELECT * FROM instructors";
-            $result = $conn->query($sql);
+            $stmt = $conn->prepare("SELECT id, name, specialty, bio FROM instructors");
+            $stmt->execute();
+            $result = $stmt->get_result();
 
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
@@ -203,6 +204,7 @@ include 'includes/header.php';
             } else {
                 echo '<div class="col-12"><p class="text-center text-muted">No instructors available yet.</p></div>';
             }
+            $stmt->close();
             ?>
         </div>
     </div>
@@ -218,8 +220,9 @@ include 'includes/header.php';
         <h2 class="text-center mb-5 fw-bold text-deep-dark">Choose Your Plan</h2>
         <div class="row g-4 justify-content-center">
             <?php
-            $sql = "SELECT * FROM memberships";
-            $result = $conn->query($sql);
+            $stmt_plans = $conn->prepare("SELECT id, type, price, description FROM memberships");
+            $stmt_plans->execute();
+            $result = $stmt_plans->get_result();
 
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
@@ -242,6 +245,7 @@ include 'includes/header.php';
             } else {
                 echo '<div class="col-12"><p class="text-center text-muted">No membership plans available yet.</p></div>';
             }
+            $stmt_plans->close();
             ?>
         </div>
     </div>

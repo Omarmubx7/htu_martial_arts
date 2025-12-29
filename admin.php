@@ -73,14 +73,15 @@ include 'includes/header.php';
         </thead>
         <tbody>
             <?php
-            $sql = "SELECT * FROM instructors";
-            $result = $conn->query($sql);
+            $stmt = $conn->prepare("SELECT id, name, specialty FROM instructors");
+            $stmt->execute();
+            $result = $stmt->get_result();
 
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     echo "<tr>";
-                    echo "<td>" . htmlspecialchars($row['name']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['specialty']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . "</td>";
+                    echo "<td>" . htmlspecialchars($row['specialty'], ENT_QUOTES, 'UTF-8') . "</td>";
                     echo '<td>';
                     // EDIT BUTTON
                     echo '<a href="instructors_manage.php?action=edit&id=' . intval($row['id']) . '" class="btn btn-warning btn-sm me-2">Edit</a>';
@@ -92,6 +93,7 @@ include 'includes/header.php';
             } else {
                 echo "<tr><td colspan='3'>No instructors found.</td></tr>";
             }
+            $stmt->close();
             ?>
         </tbody>
     </table>
@@ -110,9 +112,13 @@ include 'includes/header.php';
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label>Class Name</label>
-                    <input type="text" name="class_name" class="form-control" placeholder="e.g. Muay Thai" required>
+                    <input type="text" name="class_name" class="form-control" placeholder="e.g. Muay Thai Basics" required>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
+                    <label>Martial Art</label>
+                    <input type="text" name="martial_art" class="form-control" placeholder="e.g. Muay Thai" required>
+                </div>
+                <div class="col-md-2 mb-3">
                     <label>Day of Week</label>
                     <select name="day" class="form-select">
                         <option>Monday</option>
@@ -128,9 +134,17 @@ include 'includes/header.php';
                     <label>Start Time</label>
                     <input type="time" name="start_time" class="form-control" required>
                 </div>
-                <div class="col-md-2 mb-3">
-                    <label>End Time</label>
+                <div class="col-md-1 mb-3">
+                    <label style="display: block; margin-bottom: 0.5rem;">End Time</label>
                     <input type="time" name="end_time" class="form-control" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_kids_class" class="form-check-input" id="is_kids_class">
+                        <label class="form-check-label" for="is_kids_class">Kids Class</label>
+                    </div>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Class</button>
@@ -143,6 +157,7 @@ include 'includes/header.php';
         <thead class="table-dark">
             <tr>
                 <th>Class Name</th>
+                <th>Martial Art</th>
                 <th>Day</th>
                 <th>Time</th>
                 <th>Action</th>
@@ -150,15 +165,17 @@ include 'includes/header.php';
         </thead>
         <tbody>
             <?php
-            $sql_classes = "SELECT * FROM classes ORDER BY day_of_week, start_time";
-            $result_classes = $conn->query($sql_classes);
+            $stmt_classes = $conn->prepare("SELECT id, class_name, martial_art, day_of_week, start_time, end_time FROM classes ORDER BY day_of_week, start_time");
+            $stmt_classes->execute();
+            $result_classes = $stmt_classes->get_result();
 
             if ($result_classes->num_rows > 0) {
                 while($row = $result_classes->fetch_assoc()) {
                     echo "<tr>";
-                    echo "<td>" . htmlspecialchars($row['class_name']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['day_of_week']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['start_time']) . " - " . htmlspecialchars($row['end_time']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['class_name'], ENT_QUOTES, 'UTF-8') . "</td>";
+                    echo "<td>" . htmlspecialchars($row['martial_art'] ?? 'N/A', ENT_QUOTES, 'UTF-8') . "</td>";
+                    echo "<td>" . htmlspecialchars($row['day_of_week'], ENT_QUOTES, 'UTF-8') . "</td>";
+                    echo "<td>" . htmlspecialchars($row['start_time'], ENT_QUOTES, 'UTF-8') . " - " . htmlspecialchars($row['end_time'], ENT_QUOTES, 'UTF-8') . "</td>";
                     echo "<td>";
                     echo "<a href='classes_manage.php?action=edit&id=" . intval($row['id']) . "' class='btn btn-warning btn-sm me-2'>Edit</a>";
                     echo "<a href='classes_manage.php?action=delete&id=" . intval($row['id']) . "' class='btn btn-danger btn-sm' onclick='return confirm(\\\"Are you sure?\\\")'>Delete</a>";
@@ -166,9 +183,8 @@ include 'includes/header.php';
                     echo "</tr>";
                 }
             } else {
-                echo "<tr><td colspan='4'>No classes scheduled yet.</td></tr>";
-            }
-            ?>
+                echo "<tr><td colspan='5'>No classes scheduled yet.</td></tr>";
+            }            $stmt_classes->close();            ?>
         </tbody>
     </table>
     </div>
@@ -191,15 +207,16 @@ include 'includes/header.php';
         </thead>
         <tbody>
             <?php
-            $sql_prices = "SELECT * FROM memberships";
-            $result_prices = $conn->query($sql_prices);
+            $stmt_prices = $conn->prepare("SELECT id, type, price, description FROM memberships");
+            $stmt_prices->execute();
+            $result_prices = $stmt_prices->get_result();
 
             if ($result_prices->num_rows > 0) {
                 while($row = $result_prices->fetch_assoc()) {
                     echo "<tr>";
-                    echo "<td><strong>" . htmlspecialchars($row['type']) . "</strong></td>";
+                    echo "<td><strong>" . htmlspecialchars($row['type'], ENT_QUOTES, 'UTF-8') . "</strong></td>";
                     echo "<td>$" . number_format($row['price'], 2) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['description']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8') . "</td>";
                     echo "<td>";
                     echo '<a href="edit_price.php?id=' . intval($row['id']) . '" class="btn btn-warning btn-sm">Edit</a>';
                     echo "</td>";

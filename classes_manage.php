@@ -32,14 +32,16 @@ switch ($action) {
             $day = trim($_POST['day'] ?? '');
             $startTime = $_POST['start_time'] ?? '';
             $endTime = $_POST['end_time'] ?? '';
+            $martialArt = trim($_POST['martial_art'] ?? '');
+            $isKidsClass = isset($_POST['is_kids_class']) ? 1 : 0;
 
             // Only proceed if all required fields have values
-            if ($className && $day && $startTime && $endTime) {
-                // Prepare INSERT query with 4 placeholder values
+            if ($className && $day && $startTime && $endTime && $martialArt) {
+                // Prepare INSERT query with placeholder values
                 // Using prepared statement prevents SQL injection
-                $stmt = $conn->prepare('INSERT INTO classes (class_name, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)');
-                // Bind variables: s=string for all four (class name, day, start time, end time)
-                $stmt->bind_param('ssss', $className, $day, $startTime, $endTime);
+                $stmt = $conn->prepare('INSERT INTO classes (class_name, day_of_week, start_time, end_time, martial_art, is_kids_class) VALUES (?, ?, ?, ?, ?, ?)');
+                // Bind variables: s=string, i=integer
+                $stmt->bind_param('sssssi', $className, $day, $startTime, $endTime, $martialArt, $isKidsClass);
                 // Execute the INSERT query
                 $stmt->execute();
             }
@@ -149,6 +151,18 @@ switch ($action) {
                         <input type="time" name="end_time" class="form-control" value="<?php echo htmlspecialchars($class['end_time']); ?>" required>
                     </div>
                 </div>
+
+                <!-- Martial art selection -->
+                <div class="mb-3">
+                    <label class="form-label">Martial Art</label>
+                    <input type="text" name="martial_art" class="form-control" value="<?php echo htmlspecialchars($class['martial_art'] ?? ''); ?>" placeholder="e.g., Karate, Judo, Muay Thai" required>
+                </div>
+
+                <!-- Kids class checkbox -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" name="is_kids_class" class="form-check-input" id="is_kids_class" <?php echo (isset($class['is_kids_class']) && $class['is_kids_class']) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="is_kids_class">Kids Class</label>
+                </div>
                 
                 <!-- Action buttons -->
                 <div class="mt-4 d-flex gap-2">
@@ -173,14 +187,16 @@ switch ($action) {
             $day = trim($_POST['day'] ?? '');
             $startTime = $_POST['start_time'] ?? '';
             $endTime = $_POST['end_time'] ?? '';
+            $martialArt = trim($_POST['martial_art'] ?? '');
+            $isKidsClass = isset($_POST['is_kids_class']) ? 1 : 0;
 
             // Only update if ID is valid and all fields are provided
-            if ($id > 0 && $className && $day && $startTime && $endTime) {
+            if ($id > 0 && $className && $day && $startTime && $endTime && $martialArt) {
                 // Prepare UPDATE query with placeholders for new values
                 // Using prepared statement prevents SQL injection
-                $stmt = $conn->prepare('UPDATE classes SET class_name = ?, day_of_week = ?, start_time = ?, end_time = ? WHERE id = ?');
-                // Bind variables: s=string for name/day/times, i=integer for ID
-                $stmt->bind_param('ssssi', $className, $day, $startTime, $endTime, $id);
+                $stmt = $conn->prepare('UPDATE classes SET class_name = ?, day_of_week = ?, start_time = ?, end_time = ?, martial_art = ?, is_kids_class = ? WHERE id = ?');
+                // Bind variables: s=string, i=integer
+                $stmt->bind_param('sssssii', $className, $day, $startTime, $endTime, $martialArt, $isKidsClass, $id);
                 // Execute the UPDATE query
                 $stmt->execute();
             }

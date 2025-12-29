@@ -124,6 +124,11 @@ function canUserBookClass($user_id, $class_martial_art, $is_kids_class = false) 
                     'reason'   => "Course limit reached (2 sessions/week)."
                 ];
             }
+
+            // Rule C: 6-week access window
+            if (!isSelfDefenceWindowOpen($user_id)) {
+                return ['can_book' => false, 'reason' => 'Self-Defence course access has expired (6-week limit).'];
+            }
             break;
 
         // --- TIER 3: Elite (ID 4) - Unlimited Adult ---
@@ -202,7 +207,21 @@ function recordBooking($user_id, $class_id) {
 
 function resetWeeklySessions() {
     global $conn;
-    $conn->query("UPDATE users SET sessions_used_this_week = 0");
+    $stmt = $conn->prepare("UPDATE users SET sessions_used_this_week = 0");
+    $stmt->execute();
+    $stmt->close();
     return true;
+}
+
+function isSelfDefenceWindowOpen(int $user_id): bool {
+    global $conn;
+    $stmt = $conn->prepare("SELECT created_at FROM users WHERE id = ? LIMIT 1");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $created = $stmt->get_result()->fetch_assoc()['created_at'] ?? null;
+    if (!$created) return false;
+    $start = new DateTime($created);
+    $end   = (clone $start)->modify('+6 weeks');
+    return new DateTime() <= $end;
 }
 ?>

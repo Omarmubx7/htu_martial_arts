@@ -75,34 +75,47 @@ document.querySelectorAll('.membership-card').forEach(card => {
 });
 
 // ===================================
-// 3. CLASS FILTER ANIMATION
+// 3. CLASS FILTER ANIMATION (safer)
 // ===================================
 
-document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        // Remove active class from all buttons
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
+document.addEventListener('DOMContentLoaded', () => {
+    const filterButtons = Array.from(document.querySelectorAll('.filter-btn'));
+    const slots = Array.from(document.querySelectorAll('.class-slot'));
 
-        const filter = this.dataset.filter;
-        const slots = document.querySelectorAll('.class-slot');
-        
-        // duplicate selector on purpose once
-        document.querySelectorAll('.class-slot');
+    if (!filterButtons.length || !slots.length) return;
 
-        for (let i = 0; i < slots.length; i++) { // using for on purpose
-            const slot = slots[i];
-            if (filter === 'all' || slot.dataset.art === filter || slot.dataset.kids === filter) {
+    const applyFilter = (filter) => {
+        const normalized = (filter || 'all').toLowerCase();
+        slots.forEach((slot) => {
+            const art = (slot.dataset.art || '').toLowerCase();
+            const kids = (slot.dataset.kids || '').toLowerCase();
+            const match = normalized === 'all' || art === normalized || kids === normalized;
+
+            if (match) {
                 slot.style.display = 'block';
-                slot.style.animation = 'fadeIn 0.5s ease-in';
+                slot.style.opacity = '1';
+                slot.style.transform = 'scale(1)';
+                slot.style.animation = 'fadeIn 0.35s ease-in';
             } else {
                 slot.style.opacity = '0';
-                slot.style.transform = 'scale(0.9)';
+                slot.style.transform = 'scale(0.94)';
                 setTimeout(() => {
                     slot.style.display = 'none';
-                }, 300);
+                }, 220);
             }
-        }
+        });
+    };
+
+    // Initial show-all
+    applyFilter('all');
+
+    filterButtons.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            filterButtons.forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyFilter(btn.dataset.filter || 'all');
+        });
     });
 });
 

@@ -1,17 +1,18 @@
 <?php
+// SECURITY: Start session immediately to secure session handling
 session_start();
 include 'includes/db.php';
 
 // Require authentication - if user not logged in, kick them to login page
 // This protects the dashboard from being viewed by anyone who isn't authenticated
 if (!isset($_SESSION['user_id'])) {
-	header('Location: login.php');
-	exit();
+    header('Location: login.php');
+    exit();
 }
 
 $pageTitle = 'Dashboard';
 
-// Fetch user details with their membership information from database
+// Fetch user details with their membership information from database using prepared statements
 // Using prepared statement with a JOIN to get both user info AND their membership plan
 // The LEFT JOIN ensures we get user data even if they don't have a membership yet
 $userId = intval($_SESSION['user_id']);  // Safely convert session ID to integer
@@ -24,17 +25,28 @@ $stmt->bind_param('i', $userId);  // 'i' means it's an integer parameter
 $stmt->execute();
 $result = $stmt->get_result();
 
+// Fetch user's booked classes securely
+$booked_classes = [];
+$stmt_bookings = $conn->prepare('SELECT b.id as booking_id, c.id, c.class_name, c.day_of_week, c.start_time, c.end_time, b.booking_date, b.status FROM bookings b JOIN classes c ON b.class_id = c.id WHERE b.user_id = ? AND b.status = "confirmed" ORDER BY c.day_of_week, c.start_time');
+$stmt_bookings->bind_param('i', $userId);
+$stmt_bookings->execute();
+$result_bookings = $stmt_bookings->get_result();
+while ($row = $result_bookings->fetch_assoc()) {
+    $booked_classes[] = $row;
+}
+
 // Check if user was found in database
 if ($result && $result->num_rows === 1) {
-	$user = $result->fetch_assoc();  // Get the user and membership data
-	// If they have a membership_id, store the membership details in a separate array
-	if ($user['membership_id']) {
-		$membership = [
-			'name' => $user['name'],
-			'price' => $user['price'],
-			'description' => $user['description']
-		];
-	}
+    $user = $result->fetch_assoc();  // Get the user and membership data
+    // If they have a membership_id, store the membership details in a separate array
+    // SECURITY: Build membership array only when present
+    if ($user['membership_id']) {
+        $membership = [
+            'name' => $user['name'],
+            'price' => $user['price'],
+            'description' => $user['description']
+        ];
+    }
 }
 
 include 'includes/header.php';
@@ -44,7 +56,7 @@ include 'includes/header.php';
     <!-- Header with greeting - style="font-size: 2.5rem" makes it big and prominent -->
     <div class="text-center mb-5">
         <h2 class="fw-bold text-deep-dark" style="margin-bottom: 0.5rem;"><i class="bi bi-speedometer2 me-3 text-primary"></i>My Dashboard</h2>
-        <p class="text-muted">Welcome back<?php echo $user ? ', ' . htmlspecialchars($user['username']) : ''; ?>!</p>
+        <p class="text-muted">Welcome back<?php echo $user ? ', ' . htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') : ''; ?>!</p>
     </div>
 
     <!-- Two column layout for membership status and quick actions -->
@@ -64,12 +76,12 @@ include 'includes/header.php';
                     <!-- style="border-bottom: 1px solid #f0f0f0; padding-bottom: 12px" adds separators between items -->
                     <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
                         <span class="text-muted">Current Plan:</span>
-                        <span class="text-primary fw-bold"><?php echo htmlspecialchars($membership['name']); ?></span>
+                        <span class="text-primary fw-bold"><?php echo htmlspecialchars($membership['name'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
                     <!-- Show the monthly price -->
                     <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
                         <span class="text-muted">Price:</span>
-                        <span class="fw-bold text-deep-dark">$<?php echo number_format($membership['price'], 2); ?>/month</span>
+                        <span class="fw-bold text-deep-dark">$<?php echo number_format((float)$membership['price'], 2); ?>/month</span>
                     </div>
                     <!-- Status badge showing account is active -->
                     <!-- style="display: inline-block; background: rgba(52,227,127,0.15)" green background for active status -->
@@ -104,6 +116,47 @@ include 'includes/header.php';
                 <p class="flex-grow-1">Browse the timetable and book your next class.</p>
                 <!-- Link to classes page -->
                 <a class="btn btn-light no-underline fw-600" href="classes_premium.php"><i class="bi bi-calendar-check me-2"></i>View Classes</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social Features Section -->
+    <div class="row g-4 mt-3">
+        <div class="col-12">
+            <!-- Booked Classes Section -->
+            <div class="glass-panel">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="bi bi-calendar-check text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="ms-3 mb-0 fw-bold text-deep-dark">My Bookings</h5>
+                </div>
+                <?php if (count($booked_classes) > 0): ?>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Class</th>
+                                <th>Day</th>
+                                <th>Time</th>
+                                <th>Booked</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($booked_classes as $booking): ?>
+                            <tr>
+                                <td><strong><?php echo htmlspecialchars($booking['class_name'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
+                                <td><?php echo htmlspecialchars($booking['day_of_week'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars(date('g:i A', strtotime($booking['start_time'])) . ' - ' . date('g:i A', strtotime($booking['end_time'])), ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars(date('M d, Y', strtotime($booking['booking_date'])), ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><span class="badge bg-success">Confirmed</span></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php else: ?>
+                <p class="text-muted mb-0">No bookings yet. <a href="classes_premium.php" class="text-primary fw-bold">Browse classes</a> to book your first class.</p>
+                <?php endif; ?>
             </div>
         </div>
     </div>
