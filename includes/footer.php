@@ -20,7 +20,7 @@
 
 <!-- Custom JavaScript file for interactive features -->
 <!-- Contains functions for smooth scrolling, animations, and other interactions -->
-<script src="js/sport-interactions.js"></script>
+<script src="js/ultimate-interactions.js"></script>
 
 <!-- Close the HTML body and document tags -->
 </body>

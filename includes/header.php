@@ -56,6 +56,11 @@ if (session_status() === PHP_SESSION_NONE) {
   <link rel="shortcut icon" type="image/png" href="images/favicon.png">
   <link rel="apple-touch-icon" href="images/logo-touch.png">
   
+  <!-- Fonts: Teko (headings), Exo 2 (body), Roboto Mono (numbers) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600&family=Exo+2:wght@400;600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+
   <!-- Bootstrap CSS framework for responsive layout and components -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   
@@ -114,15 +119,7 @@ if (session_status() === PHP_SESSION_NONE) {
 <!-- JavaScript for navbar scroll effect - changes colors when user scrolls down -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Get navbar and all navigation elements
-    const navbar = document.querySelector('.navbar');
-    const navLinks = navbar.querySelectorAll('.nav-link');
-    const brandText = navbar.querySelector('.navbar-brand-text');
-    
-    // Change navbar style on scroll
-    window.addEventListener('scroll', () => {
-        const scrolled = window.pageYOffset > 20;
-        navbar.classList.toggle('navbar-scrolled', scrolled);
-    });
+    // Navbar scroll effect is now handled by ultimate-interactions.js
+    // This inline script can be removed or kept for compatibility
 });
 </script>
